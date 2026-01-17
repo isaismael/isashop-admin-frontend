@@ -1,15 +1,46 @@
+// src/routes/routes.jsx
 import { createBrowserRouter } from "react-router-dom";
-import { Login } from "../pages/login";
-import { SidebarLayout } from "../layouts/sideBar/index.jsx";
-import { sidebarRoutes } from "./sidebar.routes.jsx";
+import ProtectedRoute from "./ProtectedRoute";
+
+import AdminLayout from "../layouts/AdminLayout";
+import Login from "../pages/Login/Login";
+import Products from "../pages/products/Products";
+import CreateProduct from "../pages/products/CreateProduct";
+import Forbidden from "../pages/Errors/Forbidden";
 
 export const router = createBrowserRouter([
-    {
-        element: <SidebarLayout />,
-        children: sidebarRoutes
-    },
-    {
-        path: "/login",
-        element: <Login />
-    }
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/403",
+    element: <Forbidden />,
+  },
+  {
+    path: "/",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: "products",
+        element: (
+          <ProtectedRoute permission="product.update">
+            <Products />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "products/new",
+        element: (
+          <ProtectedRoute permission="product.create">
+            <CreateProduct />
+          </ProtectedRoute>
+        ),
+      },
+    ],
+  },
 ]);
