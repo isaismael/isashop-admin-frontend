@@ -1,59 +1,58 @@
-// src/context/AuthContext.jsx
-import { createContext, useContext, useEffect, useState } from "react";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
+import { createContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { authService } from "../api/authService";
+import { setToken, removeToken, getUserFromToken } from "../utils/auth";
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(getUserFromToken());
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = Cookies.get("token");
+  //función de login
+  const login = async (email, password) => {
+    try {
+      const data = await authService.login(email, password);
 
-    if (token) {
-      const decoded = jwtDecode(token);
-
-      if (decoded.exp * 1000 < Date.now()) {
-        Cookies.remove("token");
-      } else {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setUser({
-          id: decoded.sub,
-          email: decoded.email,
-          roles: decoded.roles,
-          permissions: decoded.permissions,
-        });
-      }
+      // -> seteo el token
+      setToken(data.token);
+      // -> decodificamos el token y guardamos el usuario
+      const userData = getUserFromToken();
+      setUser(userData);
+      console.log('User set after login:', userData);
+      // -> enviamos al usuario al panel de admin
+      navigate("/admin");
+      // -> retornamos
+      return {
+        success: true,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || "Error al iniciar sesión",
+      };
     }
-
-    setLoading(false);
-  }, []);
-
-  const login = (token) => {
-    Cookies.set("token", token, { sameSite: "strict" });
-    const decoded = jwtDecode(token);
-
-    setUser({
-      id: decoded.sub,
-      email: decoded.email,
-      roles: decoded.roles,
-      permissions: decoded.permissions,
-    });
   };
 
+  // -> función de logout
   const logout = () => {
-    Cookies.remove("token");
+    removeToken();
     setUser(null);
+    navigate("/login");
   };
 
-  return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+  // -> esta funcion es para verificar si tiene permisos
+  const hasPermission = (permission) => {
+    return user?.permissions?.includes(permission) || false;
+  };
 
-// eslint-disable-next-line react-refresh/only-export-components
-export const useAuthContext = () => useContext(AuthContext);
+  const value = {
+    user,
+    login,
+    logout,
+    hasPermission,
+    isAuthenticated: !!user,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
