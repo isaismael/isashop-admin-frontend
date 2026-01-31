@@ -5,6 +5,7 @@ import { AdminLayout } from './layouts/admin/AdminLayout';
 import { Login } from './pages/login/Login';
 import { Dashboard } from './pages/dashboard/Dashboard';
 import { Products } from './pages/products/Products';
+import { CreateProducts } from './pages/products/CreateProducts';
 
 function App() {
   return (
@@ -26,7 +27,7 @@ function App() {
             {/* CAMBIA ESTO: usa path="" para que /admin muestre el Dashboard */}
             <Route path="" element={<Dashboard />} />
             <Route path="products" element={<Products />} />
-            <Route path="products/create" element={<div>Crear Producto</div>} />
+            <Route path="products/create" element={<CreateProducts />} />
             {/* Agrega más rutas aquí */}
           </Route>
 

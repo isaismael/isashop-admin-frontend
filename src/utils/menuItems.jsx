@@ -1,13 +1,15 @@
+import {Package, LayoutDashboard } from 'lucide-react'
+
 export const menuItems = [
   {
     title: 'Dashboard',
     path: '/admin', // Cambiado para que coincida
-    icon: '📊',
+    icon: <LayoutDashboard />,
     permission: null
   },
   {
     title: 'Productos',
-    icon: '📦',
+    icon: <Package />,
     permission: null,
     children: [
       {
