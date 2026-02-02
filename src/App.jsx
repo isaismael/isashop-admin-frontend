@@ -28,6 +28,7 @@ function App() {
             <Route path="" element={<Dashboard />} />
             <Route path="products" element={<Products />} />
             <Route path="products/create" element={<CreateProducts />} />
+            <Route path="products/listproducts" element={<Products />} />
             {/* Agrega más rutas aquí */}
           </Route>
 

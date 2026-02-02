@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
-import { Save, Trash } from "lucide-react";
+// -> services
 import CategoriesService from "../../services/categories.service";
 import BrandService from "../../services/brand.service";
+import ProductService from "../../services/product.service";
+// -> 
+import { Save, Trash } from "lucide-react";
 
 export const CreateProducts = () => {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [form, setForm] = useState({
     name: "",
-    categoryId: "",
-    brand: "",
     description: "",
+    brand_id: "",
+    subcategory_id: "",
   });
 
   const handleChange = (e) => {
@@ -20,10 +23,20 @@ export const CreateProducts = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const productInstance = new ProductService();
+    productInstance.createProduct(form);
     console.log("Producto a crear:", form);
-    // 👉 acá después vas a hacer el POST a tu backend
   };
 
+  const discardProduct = () => {
+    setForm({
+      name: "",
+      description: "",
+      brand_id: "",
+      subcategory_id: "",
+    })
+  }
+  
   useEffect(() => {
     const fetchCategories = async () => {
       const categoryInstance = new CategoriesService();
@@ -32,25 +45,31 @@ export const CreateProducts = () => {
         setCategories(response);
 
         if (response.length > 0) {
-          setForm((prev) => ({ ...prev, category: response[0].name }));
+          setForm((prev) => ({ ...prev, subcategory_id: response[0].id }));
         }
       } catch (error) {
         console.log(error);
       }
     };
-    fetchCategories();
-    // -> gell brands
-    const fetBrands = async () => {
+
+    const fetchBrands = async () => {
       const brandInstance = new BrandService();
       try {
         const response = await brandInstance.getAllBrands();
         setBrands(response);
+
+        if (response.length > 0) {
+          setForm((prev) => ({ ...prev, brand_id: response[0].id }));
+        }
       } catch (error) {
         console.error(error);
       }
     };
-    fetBrands();
+
+    fetchCategories();
+    fetchBrands();
   }, []);
+
 
   return (
     <div>
@@ -63,11 +82,17 @@ export const CreateProducts = () => {
           </p>
 
           <div className="flex flex-row justify-end items-center gap-3">
-            <button className="flex flex-row justify-center items-center gap-2 px-4 py-2 font-semibold text-slate-600 hover:bg-slate-500 hover:text-white rounded-lg transition">
+            <button 
+              className="flex flex-row justify-center items-center gap-2 px-4 py-2 font-semibold text-slate-600 hover:bg-slate-500 hover:text-white rounded-lg transition"
+              onClick={discardProduct}
+              >
               <Trash size={18} />
               Descartar
             </button>
-            <button className="flex flex-row justify-center items-center gap-2 bg-[#6366f1] text-white font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition">
+            <button
+              onClick={handleSubmit}
+              type="submit"
+              className="flex flex-row justify-center items-center gap-2 bg-[#6366f1] text-white font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition">
               <Save size={18} />
               Crear Producto
             </button>
@@ -110,17 +135,18 @@ export const CreateProducts = () => {
                   Categoría
                 </label>
                 <select
-                  name="category"
-                  value={form.category}
+                  name="subcategory_id"
+                  value={form.subcategory_id}
                   onChange={handleChange}
-                  className="w-full bg-white rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary focus:border-primary px-3 py-2"
+                  className="w-full bg-white rounded-lg border border-slate-200 px-3 py-2"
                 >
-                  {categories?.map((category) => (
-                    <option key={category.id} value={category.name}>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
                   ))}
                 </select>
+
               </div>
 
               <div>
@@ -128,17 +154,18 @@ export const CreateProducts = () => {
                   Marca
                 </label>
                 <select
-                  name="brand"
-                  value={form.brand}
+                  name="brand_id"
+                  value={form.brand_id}
                   onChange={handleChange}
-                  className="w-full bg-white rounded-lg border border-slate-200 focus:ring-2 focus:ring-primary focus:border-primary px-3 py-2"
+                  className="w-full bg-white rounded-lg border border-slate-200 px-3 py-2"
                 >
-                  {brands?.map((brand) => (
-                    <option key={brand.id} value={brand.name}>
+                  {brands.map((brand) => (
+                    <option key={brand.id} value={brand.id}>
                       {brand.name}
                     </option>
                   ))}
                 </select>
+
               </div>
             </div>
 

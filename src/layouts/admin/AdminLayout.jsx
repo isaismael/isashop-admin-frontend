@@ -7,10 +7,12 @@ export const AdminLayout = () => {
   // Temporal para ver qué ruta estás visitando
   console.log('Ruta actual:', location.pathname);
   
-  return (
-    <div className="flex">
+return (
+    <div className="h-screen flex overflow-hidden">
+      {/* Sidebar, este tiene que esar fijo */}
       <Sidebar />
-      <main className="flex-1 p-8 bg-gray-100 min-h-screen">
+      {/* Contenido scrolleable, son las pages */}
+      <main className="flex-1 overflow-y-auto bg-gray-100 p-8">
         <Outlet />
       </main>
     </div>

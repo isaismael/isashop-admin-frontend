@@ -14,12 +14,22 @@ export const menuItems = [
     children: [
       {
         title: 'Lista de Productos',
-        path: '/admin/products',
-        permission: 'product.view'
+        path: '/admin/products/listproducts',
+        permission: 'product.read'
       },
       {
         title: 'Crear Producto',
         path: '/admin/products/create',
+        permission: 'product.create'
+      },
+      {
+        title: 'Categorias',
+        path: '/admin/products/category',
+        permission: 'product.create'
+      },
+      {
+        title: 'Marcas',
+        path: '/admin/products/brands',
         permission: 'product.create'
       }
     ]
