@@ -6,6 +6,8 @@ import { Login } from './pages/login/Login';
 import { Dashboard } from './pages/dashboard/Dashboard';
 import { Products } from './pages/products/Products';
 import { CreateProducts } from './pages/products/CreateProducts';
+import { Brands } from './pages/brands/Brands';
+import { Categories } from './pages/categories/categories';
 
 function App() {
   return (
@@ -24,11 +26,16 @@ function App() {
               </ProtectedRoute>
             }
           >
-            {/* CAMBIA ESTO: usa path="" para que /admin muestre el Dashboard */}
+            {/* Rutas y path */}
             <Route path="" element={<Dashboard />} />
+            {/* Products */}
             <Route path="products" element={<Products />} />
             <Route path="products/create" element={<CreateProducts />} />
             <Route path="products/listproducts" element={<Products />} />
+            {/* Brands */}
+            <Route path="products/brands" element={<Brands />} />
+            {/* Categories */}
+            <Route path="products/category" element={<Categories />} />
             {/* Agrega más rutas aquí */}
           </Route>
 

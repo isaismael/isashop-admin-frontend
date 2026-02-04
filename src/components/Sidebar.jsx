@@ -41,7 +41,7 @@ export const Sidebar = () => {
       <div className="p-4 border-b border-gray-700">
         <div className="flex flex-row gap-2 items-center justify-start ">
           <Store className="h-8 w-8 text-[#1f2937] bg-white rounded-lg p-1"/>
-          <h1 className="text-xl font-bold">Admin Panel</h1>
+          <h1 className="text-xl font-bold">IsaShop Panel</h1>
         </div>
         <p className="text-sm text-gray-400 mt-1">{user?.email}</p>
       </div>

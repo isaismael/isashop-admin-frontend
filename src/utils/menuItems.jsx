@@ -1,4 +1,4 @@
-import {Package, LayoutDashboard } from 'lucide-react'
+import { Package, LayoutDashboard } from 'lucide-react'
 
 export const menuItems = [
   {
@@ -23,15 +23,15 @@ export const menuItems = [
         permission: 'product.create'
       },
       {
+        title: 'Marcas',
+        path: '/admin/products/brands',
+        permission: 'product.create'
+      },
+      {
         title: 'Categorias',
         path: '/admin/products/category',
         permission: 'product.create'
       },
-      {
-        title: 'Marcas',
-        path: '/admin/products/brands',
-        permission: 'product.create'
-      }
     ]
   },
   {
