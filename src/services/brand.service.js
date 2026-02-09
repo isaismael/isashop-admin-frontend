@@ -3,6 +3,7 @@ import api from "./api.service";
 export default class BrandService {
   constructor() {
     this.endpoint = "/brand/getbrands";
+    this.endpoint_create = '/brand/createbrand'
   }
 
   //http://localhost:3014/api/brand/getbrands/?page=1&limit=10
@@ -15,4 +16,15 @@ export default class BrandService {
       throw error;
     }
   }
+
+  async createBrand(brandData){
+    try{
+      const response = await api.post(this.endpoint_create, brandData);
+      return response.data;
+    }catch(error){
+      console.log("Error en createBrand - frontend: ",error.message);
+      return null;
+    }
+  }
+
 }
