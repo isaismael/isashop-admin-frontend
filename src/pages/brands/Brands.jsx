@@ -1,6 +1,7 @@
-import { Save, Trash } from "lucide-react";
-import { useState } from "react";
+import { Save, Trash, SquarePen, Frown } from "lucide-react";
+import { useState, useEffect } from "react";
 import BrandService from "../../services/brand.service";
+import BrandImageService from "../../services/brandImage.service";
 
 export const Brands = () => {
   const initialForm = {
@@ -10,6 +11,11 @@ export const Brands = () => {
   };
 
   const [form, setForm] = useState(initialForm);
+  const [brands, setBrands] = useState([]);
+  const [pagination, setPagination] = useState(null);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5);
+  const [editingId, setEditingId] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,106 +33,302 @@ export const Brands = () => {
     setForm(initialForm);
   };
 
+  // -> listado de las marcas con paginado, desde brand.service
+  const getBrands = async (page, limit) => {
+    try {
+      const brandService = new BrandService();
+      const response = await brandService.getAllBrands(page, limit);
+
+      setBrands(response?.data || []);
+      setPagination(response?.pagination || null);
+    } catch (error) {
+      console.error("error en getBrands:", error.message);
+      setBrands([]);
+      setPagination(null);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       const brandService = new BrandService();
-      await brandService.createBrand(form);
-
+      if (editingId) {
+        await brandService.updateBrand(editingId, form);
+        alert("Marca actualizada correctamente");
+      } else {
+        await brandService.createBrand(form);
+        alert("Marca creada correctamente");
+      }
       discardBrand();
-      alert("Marca creada correctamente");
+      setEditingId(null);
+      getBrands(page, limit);
     } catch (error) {
       console.error("Error al crear marca:", error);
     }
   };
 
+  const handleEdit = (brand) => {
+    setForm({
+      name: brand.name,
+      description: brand.description,
+      active: brand.active,
+    });
+    setEditingId(brand.id);
+  };
+
+  // -> funcion para subir img de la brand
+  const handleImageUpload = async (e, brand) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const brandImageService = new BrandImageService();
+
+      if (brand.images && brand.images.length > 0) {
+        await brandImageService.updateBrandImageById(brand.images[0].id, {
+          brand_id: brand.id,
+          file,
+          alt: `Logo de ${brand.name}`,
+        });
+        alert("Logo actualizado correctamente");
+      } else {
+        await brandImageService.createImageBrand({
+          brand_id: brand.id,
+          file,
+          alt: `Logo de ${brand.name}`,
+        });
+        alert("Logo subido correctamente");
+      }
+
+      getBrands(page, limit);
+    } catch (error) {
+      console.error("Error al subir la imagen desde el front: ", error.message);
+    }
+  };
+
+  useEffect(() => {
+    getBrands(page, limit);
+  }, [page, limit]);
+
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="mb-4">
-        <h2 className="text-2xl font-bold">Gestor de marcas</h2>
-        <p className="text-slate-500">
-          Defina información clave de la marca y recursos visualmente
-          enriquecidos para lograr una exhibición atractiva.
-        </p>
+    <div>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-4">
+          <h2 className="text-2xl font-bold">Gestor de marcas</h2>
+          <p className="text-slate-500">
+            Defina información clave de la marca y recursos visualmente
+            enriquecidos para lograr una exhibición atractiva.
+          </p>
 
-        <div className="flex justify-end items-center gap-3">
-          <button
-            type="button"
-            onClick={discardBrand}
-            className="flex items-center gap-2 px-4 py-2 font-semibold text-slate-600 hover:bg-slate-500 hover:text-white rounded-lg transition"
-          >
-            <Trash size={18} />
-            Descartar
-          </button>
+          <div className="flex justify-end items-center gap-3">
+            <button
+              type="button"
+              onClick={discardBrand}
+              className="flex items-center gap-2 px-4 py-2 font-semibold text-slate-600 hover:bg-slate-500 hover:text-white rounded-lg transition"
+            >
+              <Trash size={18} />
+              Descartar
+            </button>
 
-          <button
-            type="submit"
-            className="flex items-center gap-2 bg-[#6366f1] text-white font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition"
-          >
-            <Save size={18} />
-            Crear Marca
-          </button>
+            <button
+              type="submit"
+              className="flex items-center gap-2 bg-[#6366f1] text-white font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition"
+            >
+              <Save size={18} />
+              {editingId ? "Actualizar Marca" : "Crear Marca"}
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div className="w-full flex gap-3">
-        <div className="w-full bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold mb-6">Detalles de la marca</h2>
+        <div className="w-full flex gap-3">
+          <div className="w-full bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold mb-6">
+                Detalles de la marca
+              </h2>
 
-            <div className="flex items-center space-x-3">
-              <span className="text-sm text-slate-500">
-                {form.active === 1 ? "Activa" : "Inactiva"}
-              </span>
+              <div className="flex items-center space-x-3">
+                <span className="text-sm text-slate-500">
+                  {form.active === 1 ? "Activa" : "Inactiva"}
+                </span>
 
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="sr-only peer"
-                  checked={form.active === 1}
-                  onChange={handleToggle}
-                />
-                <div className="w-11 h-6 rounded-full transition-colors bg-[#e2e8f0] peer-checked:bg-[#6366f1] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-full"></div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={form.active === 1}
+                    onChange={handleToggle}
+                  />
+                  <div className="w-11 h-6 rounded-full transition-colors bg-[#e2e8f0] peer-checked:bg-[#6366f1] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-full"></div>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                Nombre de la marca
               </label>
+              <input
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                type="text"
+                placeholder="Ej. Nike, Apple, Samsung, etc."
+                required
+                className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366f1] focus:border-[#6366f1]"
+              />
+            </div>
+
+            <div className="mt-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                Descripción
+              </label>
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                rows={4}
+                placeholder="Descripción y palabras claves sobre la marca..."
+                className="w-full rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#6366f1] focus:border-[#6366f1] px-3 py-2"
+              />
             </div>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Nombre de la marca
-            </label>
-            <input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              type="text"
-              placeholder="Ej. Nike, Apple, Samsung, etc."
-              className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#6366f1] focus:border-[#6366f1]"
-            />
-          </div>
-
-          <div className="mt-2">
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Descripción
-            </label>
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              rows={4}
-              placeholder="Descripción y palabras claves sobre la marca..."
-              className="w-full rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#6366f1] focus:border-[#6366f1] px-3 py-2"
-            />
-          </div>
         </div>
-      </div>
-
+      </form>
+      {/* `http://localhost:3014${brand.images[0].url}` */}
       <div className="w-full flex gap-3 mt-4">
         <div className="w-full bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
           <h2 className="text-lg font-semibold mb-6">Listado de marcas</h2>
+          <div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-slate-50">
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      ID
+                    </th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Logo Marca
+                    </th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Nombre Marca
+                    </th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Descripcion
+                    </th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Acción
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+  {Array.isArray(brands) && brands.length > 0 ? (
+    brands.map((brand) => (
+      <tr
+        key={brand.id}
+        className="hover:bg-slate-50 transition"
+      >
+        {/* ID */}
+        <td className="px-6 py-4 text-sm text-slate-700 font-medium">
+          {brand.id}
+        </td>
+
+        {/* Logo */}
+        <td className="px-6 py-4">
+          <div className="h-14 w-14 rounded-lg border border-slate-200 bg-white overflow-hidden flex items-center justify-center">
+            <label className="cursor-pointer w-full h-full flex items-center justify-center">
+              <img
+                src={
+                  brand.images?.length
+                    ? `http://localhost:3014/${brand.images[0].url.replace(/^\/+/, "")}`
+                    : ""
+                }
+                alt={brand.name}
+                className="max-h-12 object-contain"
+              />
+              <input
+                type="file"
+                className="hidden"
+                onChange={(e) => handleImageUpload(e, brand)}
+              />
+            </label>
+          </div>
+        </td>
+
+        {/* Nombre */}
+        <td className="px-6 py-4 text-sm font-semibold text-slate-800">
+          {brand.name}
+        </td>
+
+        {/* Descripción */}
+        <td className="px-6 py-4 text-sm text-slate-500 max-w-xs truncate">
+          {brand.description}
+        </td>
+
+        {/* Acciones */}
+        <td className="px-6 py-4">
+          <button
+            type="button"
+            onClick={() => handleEdit(brand)}
+            className="p-2 rounded-lg hover:bg-indigo-50 text-indigo-600 transition"
+          >
+            <SquarePen size={18} />
+          </button>
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td
+        colSpan="5"
+        className="text-center py-8 text-slate-400"
+      >
+        <div className="flex items-center justify-center gap-2">
+          No hay marcas disponibles
+          <Frown size={18} />
+        </div>
+      </td>
+    </tr>
+  )}
+</tbody>
+
+              </table>
+            </div>
+          </div>
         </div>
       </div>
-    </form>
+      {pagination && (
+        <div className="sticky bottom-0 w-full flex justify-between gap-4 mt-6 bg-white border border-gray-200 px-6 py-4 z-10">
+          <div className="flex flex-row gap-3 items-center">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((prev) => prev - 1)}
+              className="px-4 py-2 bg-slate-100 text-slate-600 font-semibold rounded disabled:opacity-50 hover:bg-slate-200 transition"
+            >
+              Anterior
+            </button>
+
+            <span className="text-gray-500 font-semibold">
+              Página {pagination.page} de {pagination.totalPages}
+            </span>
+
+            <button
+              disabled={page === pagination.totalPages}
+              onClick={() => setPage((prev) => prev + 1)}
+              className="px-4 py-2 bg-slate-100 text-slate-600 font-semibold rounded disabled:opacity-50 hover:bg-slate-200 transition"
+            >
+              Siguiente
+            </button>
+          </div>
+
+          <div className="flex items-center">
+            <span className="text-gray-500 font-semibold">
+              Mostrando {brands.length} de {pagination.total} marcas
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
