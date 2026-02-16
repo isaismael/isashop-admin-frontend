@@ -113,14 +113,13 @@ export const Brands = () => {
 
   return (
     <div>
+      <h2 className="text-2xl font-bold">Gestor de marcas</h2>
+      <p className="text-slate-500">
+        Defina información clave de la marca y recursos visualmente enriquecidos
+        para lograr una exhibición atractiva.
+      </p>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <h2 className="text-2xl font-bold">Gestor de marcas</h2>
-          <p className="text-slate-500">
-            Defina información clave de la marca y recursos visualmente
-            enriquecidos para lograr una exhibición atractiva.
-          </p>
-
           <div className="flex justify-end items-center gap-3">
             <button
               type="button"
@@ -223,76 +222,75 @@ export const Brands = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
-  {Array.isArray(brands) && brands.length > 0 ? (
-    brands.map((brand) => (
-      <tr
-        key={brand.id}
-        className="hover:bg-slate-50 transition"
-      >
-        {/* ID */}
-        <td className="px-6 py-4 text-sm text-slate-700 font-medium">
-          {brand.id}
-        </td>
+                  {Array.isArray(brands) && brands.length > 0 ? (
+                    brands.map((brand) => (
+                      <tr
+                        key={brand.id}
+                        className="hover:bg-slate-50 transition"
+                      >
+                        {/* ID */}
+                        <td className="px-6 py-4 text-sm text-slate-700 font-medium">
+                          {brand.id}
+                        </td>
 
-        {/* Logo */}
-        <td className="px-6 py-4">
-          <div className="h-14 w-14 rounded-lg border border-slate-200 bg-white overflow-hidden flex items-center justify-center">
-            <label className="cursor-pointer w-full h-full flex items-center justify-center">
-              <img
-                src={
-                  brand.images?.length
-                    ? `http://localhost:3014/${brand.images[0].url.replace(/^\/+/, "")}`
-                    : ""
-                }
-                alt={brand.name}
-                className="max-h-12 object-contain"
-              />
-              <input
-                type="file"
-                className="hidden"
-                onChange={(e) => handleImageUpload(e, brand)}
-              />
-            </label>
-          </div>
-        </td>
+                        {/* Logo */}
+                        <td className="px-6 py-4">
+                          <div className="h-14 w-14 rounded-lg border border-slate-200 bg-white overflow-hidden flex items-center justify-center">
+                            <label className="cursor-pointer w-full h-full flex items-center justify-center">
+                              <img
+                                src={
+                                  brand.images?.length
+                                    ? `http://localhost:3014/${brand.images[0].url.replace(/^\/+/, "")}`
+                                    : ""
+                                }
+                                alt={brand.name}
+                                className="max-h-12 object-contain"
+                              />
+                              <input
+                                type="file"
+                                className="hidden"
+                                onChange={(e) => handleImageUpload(e, brand)}
+                              />
+                            </label>
+                          </div>
+                        </td>
 
-        {/* Nombre */}
-        <td className="px-6 py-4 text-sm font-semibold text-slate-800">
-          {brand.name}
-        </td>
+                        {/* Nombre */}
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-800">
+                          {brand.name}
+                        </td>
 
-        {/* Descripción */}
-        <td className="px-6 py-4 text-sm text-slate-500 max-w-xs truncate">
-          {brand.description}
-        </td>
+                        {/* Descripción */}
+                        <td className="px-6 py-4 text-sm text-slate-500 max-w-xs truncate">
+                          {brand.description}
+                        </td>
 
-        {/* Acciones */}
-        <td className="px-6 py-4">
-          <button
-            type="button"
-            onClick={() => handleEdit(brand)}
-            className="p-2 rounded-lg hover:bg-indigo-50 text-indigo-600 transition"
-          >
-            <SquarePen size={18} />
-          </button>
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td
-        colSpan="5"
-        className="text-center py-8 text-slate-400"
-      >
-        <div className="flex items-center justify-center gap-2">
-          No hay marcas disponibles
-          <Frown size={18} />
-        </div>
-      </td>
-    </tr>
-  )}
-</tbody>
-
+                        {/* Acciones */}
+                        <td className="px-6 py-4">
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(brand)}
+                            className="p-2 rounded-lg hover:bg-indigo-50 text-indigo-600 transition"
+                          >
+                            <SquarePen size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="5"
+                        className="text-center py-8 text-slate-400"
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          No hay marcas disponibles
+                          <Frown size={18} />
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
               </table>
             </div>
           </div>
