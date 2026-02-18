@@ -2,9 +2,12 @@ import api from "./api.service";
 
 export default class BrandService {
   constructor() {
+    // -> con paginacion
     this.endpoint = "/brand/getbrands";
+    // -> sin paginacion
+    this.getallbrands = "/brand/getallbrands";
     this.endpoint_create = "/brand/createbrand";
-    this.endpoint_update = "brand/updatebrand/:id";
+    this.endpoint_update = "/brand/updatebrand/:id";
   }
 
   //http://localhost:3014/api/brand/getbrands/?page=1&limit=10
@@ -16,6 +19,17 @@ export default class BrandService {
       return response.data;
     } catch (error) {
       console.error("Error en getAllBrans - frontend: ", error.message);
+      throw error;
+    }
+  }
+
+  // -> http://localhost:3014/api/brand/getallbrands
+  async getBrands(){
+    try {
+      const response = await api.get(this.getallbrands);
+      return response.data;
+    } catch (error) {
+      console.error("Error en getBrands - service: ", error.message);
       throw error;
     }
   }

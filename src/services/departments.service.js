@@ -5,6 +5,7 @@ export default class DepartmentsService {
     this.create = "/department/createdepartment";
     this.getAll = "/department/getalldepartments";
     this.getdepartment = "/department/getdepartments";
+    this.updatedepartment = "/department/updatedepartment/";
   }
 
   async createDepartment(departmentData) {
@@ -42,4 +43,16 @@ export default class DepartmentsService {
       throw error;
     }
   }
+
+  // -> http://localhost:3014/api/department/updatedepartment/1
+  async updateDepartment(id, departmentData){
+    try {
+      const response = await api.put(`${this.updatedepartment}${id}`, departmentData);
+      return response.data;
+    } catch (error) {
+      console.error("Error en updateDepartment - service: ", error.message);
+      throw error;
+    }
+  }
+
 }

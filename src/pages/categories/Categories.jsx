@@ -1,4 +1,11 @@
-import { Folder, FolderOpen, FolderTree, Save, Trash } from "lucide-react";
+import {
+  Folder,
+  FolderOpen,
+  FolderTree,
+  Save,
+  SquarePen,
+  Trash,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import DepartmentsService from "../../services/departments.service";
 import CategoryService from "../../services/category.service";
@@ -26,6 +33,12 @@ export const Categories = () => {
   const [pagination, setPagination] = useState(null);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(5);
+
+  const [expandedDepartments, setExpandedDepartments] = useState({});
+  const [expandedCategories, setExpandedCategories] = useState({});
+
+  const [editingId, setEditingId] = useState(null);
+  const [editingType, setEditingType] = useState(null); // department | category | subcategory
 
   const departmentsService = new DepartmentsService();
   const categoryService = new CategoryService();
@@ -68,35 +81,64 @@ export const Categories = () => {
 
   const handleSave = async () => {
     try {
-      if (mode === "department") {
-        await departmentsService.createDepartment({
-          name: departmentName,
-          active: departmentActive,
-        });
+      if (editingId) {
+        // UPDATE
+        if (editingType === "department") {
+          await departmentsService.updateDepartment(editingId, {
+            name: departmentName,
+          });
+        }
+
+        if (editingType === "category") {
+          await categoryService.updateCategory(editingId, {
+            name: categoryName,
+            departament_id: selectedDepartment,
+          });
+        }
+
+        if (editingType === "subcategory") {
+          await subcategoryService.updateSubcategory(editingId, {
+            name: subcategoryName,
+            category_id: selectedCategory,
+          });
+        }
+
+        alert("Actualizado correctamente");
+      } else {
+        // CREATE
+        if (mode === "department") {
+          await departmentsService.createDepartment({
+            name: departmentName,
+            active: departmentActive,
+          });
+        }
+
+        if (mode === "category") {
+          await categoryService.createCategory({
+            name: categoryName,
+            departament_id: Number(selectedDepartment),
+            active: 1,
+          });
+        }
+
+        if (mode === "subcategory") {
+          await subcategoryService.createSubcategory({
+            name: subcategoryName,
+            active: subcategoryActive,
+            category_id: selectedCategory,
+          });
+        }
+
+        alert("Creado correctamente");
       }
 
-      if (mode === "category") {
-        await categoryService.createCategory({
-          name: categoryName,
-          departament_id: Number(selectedDepartment),
-          active: 1,
-        });
-      }
-
-      if (mode === "subcategory") {
-        await subcategoryService.createSubcategory({
-          name: subcategoryName,
-          active: subcategoryActive,
-          category_id: selectedCategory,
-        });
-      }
+      setEditingId(null);
+      setEditingType(null);
 
       await fetchDepartments();
       await fetchCategories();
       await fetchCategoryTree(page, limit);
       resetForm();
-
-      alert("Creado correctamente");
     } catch (error) {
       console.error(error);
       alert("Error al guardar");
@@ -106,6 +148,44 @@ export const Categories = () => {
   const isDepartmentMode = mode === "department";
   const isCategoryMode = mode === "category";
   const isSubcategoryMode = mode === "subcategory";
+
+  const toggleDepartment = (id) => {
+    setExpandedDepartments((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const toggleCategory = (id) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const handleEdit = (type, data, parent = null) => {
+    setEditingId(data.id);
+    setEditingType(type);
+
+    if (type === "department") {
+      setMode("department");
+      setDepartmentName(data.name);
+    }
+
+    if (type === "category") {
+      setMode("category");
+      setCategoryName(data.name);
+      setSelectedDepartment(parent.id);
+    }
+
+    if (type === "subcategory") {
+      setMode("subcategory");
+      setSubcategoryName(data.name);
+      setSelectedCategory(parent.id);
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <div>
@@ -262,42 +342,100 @@ export const Categories = () => {
       {/* Arbol de categorias */}
       <div className="w-full flex gap-3 mt-4">
         <div className="w-full bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <h3 className="text-lg font-semibold mb-6">Árbol de Categorías</h3>
+          <div className="flex items-center justify-between border-b border-slate-200">
+            <h3 className="text-lg font-semibold mb-6">Árbol de Categorías</h3>
+          </div>
           <div className="overflow-x-auto">
-            <pre className="bg-slate-100 p-4 rounded-lg overflow-x-auto text-sm">
+            <pre className="rounded-lg overflow-x-auto text-sm">
               <div className="space-y-4">
                 {categoryTree?.map((department) => (
                   <div
                     key={department.id}
-                    className="border rounded-lg p-4 bg-slate-50"
+                    className="border-b p-4 border-slate-200 hover:bg-slate-50 cursor-pointer transition"
                   >
                     {/* DEPARTAMENTO */}
-                    <div className="flex items-center gap-2 font-bold text-indigo-600 text-lg">
-                      <FolderTree size={20} /> {department.name}
+                    <div className="flex items-center justify-between">
+                      <div
+                        onClick={() => toggleDepartment(department.id)}
+                        className="flex items-center gap-2 font-bold text-indigo-600 text-lg cursor-pointer"
+                      >
+                        {expandedDepartments[department.id] ? (
+                          <FolderOpen size={20} />
+                        ) : (
+                          <Folder size={20} />
+                        )}
+                        {department.name}
+                      </div>
+
+                      <button
+                        onClick={() => handleEdit("department", department)}
+                        className="text-sm px-3 py-1 text-indigo-600 rounded hover:bg-indigo-200 transition"
+                      >
+                        <SquarePen size={22} />
+                      </button>
                     </div>
 
                     {/* CATEGORIAS */}
-                    <div className="ml-6 mt-3 space-y-2">
-                      {department.categories?.map((category) => (
-                        <div key={category.id}>
-                          <div className="flex items-center gap-2 font-semibold text-slate-700">
-                            <FolderOpen size={15} /> {category.name}
-                          </div>
-
-                          {/* SUBCATEGORIAS */}
-                          <div className="ml-10 mt-1 space-y-1">
-                            {category.subcategories?.map((subcategory) => (
+                    {expandedDepartments[department.id] && (
+                      <div className="ml-6 mt-3 space-y-2">
+                        {department.categories?.map((category) => (
+                          <div key={category.id}>
+                            <div className="flex items-center justify-between">
                               <div
-                                key={subcategory.id}
-                                className="flex items-center gap-2 text-slate-500 text-sm"
+                                onClick={() => toggleCategory(category.id)}
+                                className="flex items-center gap-2 font-semibold text-slate-700 cursor-pointer"
                               >
-                                <FolderOpen size={15} /> {subcategory.name}
+                                {expandedCategories[category.id] ? (
+                                  <FolderOpen size={15} />
+                                ) : (
+                                  <Folder size={15} />
+                                )}
+                                {category.name}
                               </div>
-                            ))}
+
+                              <button
+                                onClick={() =>
+                                  handleEdit("category", category, department)
+                                }
+                                className="text-xs px-3 py-1 text-slate-700 rounded hover:bg-slate-300 transition"
+                              >
+                                <SquarePen size={22} />
+                              </button>
+                            </div>
+
+                            {/* SUBCATEGORIAS */}
+                            {expandedCategories[category.id] && (
+                              <div className="ml-10 mt-1 space-y-1">
+                                {category.subcategories?.map((subcategory) => (
+                                  <div
+                                    key={subcategory.id}
+                                    className="flex items-center justify-between text-slate-500 text-sm"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <Folder size={14} />
+                                      {subcategory.name}
+                                    </div>
+
+                                    <button
+                                      onClick={() =>
+                                        handleEdit(
+                                          "subcategory",
+                                          subcategory,
+                                          category,
+                                        )
+                                      }
+                                      className="text-xs px-3 py-1 text-slate-700 rounded hover:bg-slate-300 transition"
+                                    >
+                                      <SquarePen size={22} />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

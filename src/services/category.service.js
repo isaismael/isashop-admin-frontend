@@ -4,6 +4,7 @@ export default class CategoryService{
     constructor(){
         this.create = "/category/createcategory";
         this.getAll = "/category/getallcategories";
+        this.updatecategory = "/category/updatecategory/";
     }
 
     async createCategory(categoryData){
@@ -22,6 +23,17 @@ export default class CategoryService{
             return response.data;
         } catch (error) {
             console.error("Error en getallCategories - services: ", error.message);
+            throw error;
+        }
+    }
+
+    // -> http://localhost:3014/api/category/updatecategory/1
+    async updateCategory(id, categoryData){
+        try {
+            const response = await api.put(`${this.updatecategory}${id}`, categoryData);
+            return response.data;
+        } catch (error) {
+            console.error("Error en updateCategory - service: ", error.message);
             throw error;
         }
     }

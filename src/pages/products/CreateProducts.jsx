@@ -3,10 +3,13 @@ import { useEffect, useState } from "react";
 import CategoriesService from "../../services/categories.service";
 import BrandService from "../../services/brand.service";
 import ProductService from "../../services/product.service";
-// -> 
+// ->
 import { Save, Trash } from "lucide-react";
 
 export const CreateProducts = () => {
+  const [products, setProducts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [form, setForm] = useState({
@@ -16,16 +19,40 @@ export const CreateProducts = () => {
     subcategory_id: "",
   });
 
+  const fetchProducts = async (page, limit) => {
+    const productInstance = new ProductService();
+    try {
+      const response = await productInstance.getProducts(page, limit);
+      setProducts(response.data);
+    } catch (error) {
+      console.error("Error en fetchProducts: ", error.message);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     const productInstance = new ProductService();
-    productInstance.createProduct(form);
-    console.log("Producto a crear:", form);
+
+    try {
+      await productInstance.createProduct(form);
+
+      console.log("Producto creado:", form);
+
+      setForm({
+        name: "",
+        description: "",
+        brand_id: "",
+        subcategory_id: "",
+      });
+    } catch (error) {
+      console.error("Error creando producto:", error);
+    }
   };
 
   const discardProduct = () => {
@@ -34,19 +61,25 @@ export const CreateProducts = () => {
       description: "",
       brand_id: "",
       subcategory_id: "",
-    })
-  }
-  
+    });
+  };
+
+  const createVariation = async (variationData) => {
+    const variationInstance = new ProductVariationService();
+    try {
+      const response = await variationInstance.createVariation(variationData);
+      console.log("Variación creada:", response);
+    } catch (error) {
+      console.error("Error creando variación:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchCategories = async () => {
       const categoryInstance = new CategoriesService();
       try {
         const response = await categoryInstance.getAllCategories();
         setCategories(response);
-
-        if (response.length > 0) {
-          setForm((prev) => ({ ...prev, subcategory_id: response[0].id }));
-        }
       } catch (error) {
         console.log(error);
       }
@@ -55,12 +88,8 @@ export const CreateProducts = () => {
     const fetchBrands = async () => {
       const brandInstance = new BrandService();
       try {
-        const response = await brandInstance.getAllBrands();
+        const response = await brandInstance.getBrands();
         setBrands(response);
-
-        if (response.length > 0) {
-          setForm((prev) => ({ ...prev, brand_id: response[0].id }));
-        }
       } catch (error) {
         console.error(error);
       }
@@ -68,8 +97,8 @@ export const CreateProducts = () => {
 
     fetchCategories();
     fetchBrands();
-  }, []);
-
+    fetchProducts(page, limit);
+  }, [page, limit]);
 
   return (
     <div>
@@ -82,17 +111,17 @@ export const CreateProducts = () => {
           </p>
 
           <div className="flex flex-row justify-end items-center gap-3">
-            <button 
+            <button
               className="flex flex-row justify-center items-center gap-2 px-4 py-2 font-semibold text-slate-600 hover:bg-slate-500 hover:text-white rounded-lg transition"
               onClick={discardProduct}
-              >
+            >
               <Trash size={18} />
               Descartar
             </button>
             <button
               onClick={handleSubmit}
-              type="submit"
-              className="flex flex-row justify-center items-center gap-2 bg-[#6366f1] text-white font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition">
+              className="flex flex-row justify-center items-center gap-2 bg-[#6366f1] text-white font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition"
+            >
               <Save size={18} />
               Crear Producto
             </button>
@@ -140,13 +169,13 @@ export const CreateProducts = () => {
                   onChange={handleChange}
                   className="w-full bg-white rounded-lg border border-slate-200 px-3 py-2"
                 >
+                  <option value="">Selecciona una categoría</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
                   ))}
                 </select>
-
               </div>
 
               <div>
@@ -159,13 +188,13 @@ export const CreateProducts = () => {
                   onChange={handleChange}
                   className="w-full bg-white rounded-lg border border-slate-200 px-3 py-2"
                 >
+                  <option value="">Selecciona una marca</option>
                   {brands.map((brand) => (
                     <option key={brand.id} value={brand.id}>
                       {brand.name}
                     </option>
                   ))}
                 </select>
-
               </div>
             </div>
 
@@ -185,17 +214,44 @@ export const CreateProducts = () => {
             </div>
           </div>
         </section>
-
-        {/* Botón */}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="bg-primary text-white px-6 py-2 rounded-lg font-medium hover:opacity-90 transition"
-          >
-            Crear Producto
-          </button>
-        </div>
       </form>
+      {/* listado de products creado */}
+      <div className="w-full flex gap-3 mt-4">
+        <div className="w-full bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-200">
+            <h3 className="text-lg font-semibold mb-6">Listado de productos</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <div className="rounded-lg overflow-x-auto text-sm">
+              <div className="space-y-4">
+                {products.length > 0 && (
+                  <div className="mt-2">
+                    {products.map((product) => (
+                      <div
+                        key={product.id}
+                        className="flex flex-row justify-between items-center p-4 bg-white rounded-lg border border-slate-200 shadow-sm mb-4"
+                      >
+                        <h4 className="text-md font-semibold">
+                          {product.id}
+                        </h4>
+                        <h4 className="text-md font-semibold">
+                          {product.name}
+                        </h4>
+                        <h4 className="text-md font-semibold">
+                          {product.subcategory.name}
+                        </h4>
+                        <p className="text-sm text-slate-500">
+                          {product.brand.name}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
