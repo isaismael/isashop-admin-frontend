@@ -240,7 +240,7 @@ export const Brands = () => {
                               <img
                                 src={
                                   brand.images?.length
-                                    ? `http://localhost:3014/${brand.images[0].url.replace(/^\/+/, "")}`
+                                    ? `http://localhost:3014/api/${brand.images[0].url.replace(/^\/+/, "")}`
                                     : ""
                                 }
                                 alt={brand.name}

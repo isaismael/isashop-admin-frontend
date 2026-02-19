@@ -8,6 +8,8 @@ import { Products } from './pages/products/Products';
 import { CreateProducts } from './pages/products/CreateProducts';
 import { Brands } from './pages/brands/Brands';
 import { Categories } from './pages/categories/categories';
+import { Colors } from './pages/colors/Colors';
+import { Sizes } from './pages/sizes/Sizes';
 
 function App() {
   return (
@@ -36,6 +38,8 @@ function App() {
             <Route path="products/brands" element={<Brands />} />
             {/* Categories */}
             <Route path="products/category" element={<Categories />} />
+            <Route path="products/colors" element={<Colors />} />
+            <Route path="products/sizes" element={<Sizes />} />
             {/* Agrega más rutas aquí */}
           </Route>
 
