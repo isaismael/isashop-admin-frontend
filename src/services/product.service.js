@@ -4,6 +4,7 @@ export default class ProductService{
     constructor(){
         this.endpoint = '/product/createproduct';
         this.get_products = "/product/getproducts/"
+        this.updateUrl = "/product/updateproduct/";
     }
 
     async createProduct(productData){
@@ -23,6 +24,17 @@ export default class ProductService{
             return response.data;
         } catch (error) {
             console.error("Error en getProducts - service: ", error.message);
+            throw error;
+        }
+    }
+    
+    // ->
+    async updateProduct(id, productData){
+        try {
+            const response = await api.put(`${this.updateUrl}${id}`, productData);
+            return response.data;
+        } catch (error) {
+            console.error("Error en updateProduct: ", error.message);
             throw error;
         }
     }
