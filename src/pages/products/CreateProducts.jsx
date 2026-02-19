@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Save, Trash, SquarePen, BookmarkPlus, ImagePlus, X, Upload, ChevronDown, ChevronRight } from "lucide-react";
+import { Save, Trash, SquarePen, BookmarkPlus, ImagePlus, X, Upload, ChevronDown, ChevronRight, Star } from "lucide-react";
 
 import CategoriesService from "../../services/categories.service";
 import BrandService from "../../services/brand.service";
@@ -26,8 +26,15 @@ export const CreateProducts = () => {
   // variations per product: { [product_id]: [...] }
   const [variationsMap, setVariationsMap] = useState({});
 
-  // Images for the image tab
+  // Images para nuevas subidas
   const [images, setImages] = useState([]);
+  // Imágenes ya existentes en la variante
+  const [existingImages, setExistingImages] = useState([]);
+  // ID de imagen existente marcada como principal
+  const [mainImageId, setMainImageId] = useState(null);
+  // Index de nueva imagen marcada como principal
+  const [mainImageIndex, setMainImageIndex] = useState(null);
+
   const fileInputRef = useRef(null);
 
   const [form, setForm] = useState({
@@ -68,8 +75,8 @@ export const CreateProducts = () => {
   // FETCH VARIATIONS FOR A PRODUCT
   // =========================
   const fetchVariations = async (productId) => {
-    const id = Number(productId); // ✅ siempre número
-    if (variationsMap[id]) return; // already fetched
+    const id = Number(productId);
+    if (variationsMap[id]) return;
     const variationInstance = new ProductVariationService();
     try {
       const response = await variationInstance.getVariationsByProduct(id);
@@ -81,10 +88,29 @@ export const CreateProducts = () => {
   };
 
   // =========================
+  // CARGAR IMÁGENES EXISTENTES DE UNA VARIANTE
+  // =========================
+  const fetchImagesForVariation = async (variationId) => {
+    try {
+      const imageService = new ProductImageService();
+      const all = await imageService.getAllProductImages();
+      const filtered = (all || []).filter(
+        (img) => Number(img.product_variation_id) === Number(variationId)
+      );
+      setExistingImages(filtered);
+      const main = filtered.find((img) => Number(img.is_main) === 1);
+      setMainImageId(main?.id || null);
+    } catch (error) {
+      console.error("Error cargando imágenes existentes:", error);
+      setExistingImages([]);
+    }
+  };
+
+  // =========================
   // TOGGLE ROW EXPAND
   // =========================
   const handleToggleExpand = async (product) => {
-    const id = Number(product.id); // ✅ siempre número
+    const id = Number(product.id);
     if (expandedProductId === id) {
       setExpandedProductId(null);
     } else {
@@ -110,7 +136,7 @@ export const CreateProducts = () => {
   };
 
   // =========================
-  // IMAGE HANDLERS
+  // IMAGE HANDLERS (nuevas)
   // =========================
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files);
@@ -127,6 +153,58 @@ export const CreateProducts = () => {
       URL.revokeObjectURL(prev[index].preview);
       return prev.filter((_, i) => i !== index);
     });
+    if (mainImageIndex === index) setMainImageIndex(null);
+    else if (mainImageIndex > index) setMainImageIndex((prev) => prev - 1);
+  };
+
+  // =========================
+  // ELIMINAR IMAGEN EXISTENTE
+  // =========================
+  const handleDeleteExistingImage = async (imageId) => {
+    if (!window.confirm("¿Eliminar esta imagen?")) return;
+    try {
+      const imageService = new ProductImageService();
+      await imageService.deleteProductImage(imageId);
+      setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
+      if (mainImageId === imageId) setMainImageId(null);
+    } catch (error) {
+      console.error("Error eliminando imagen:", error);
+    }
+  };
+
+  // =========================
+  // MARCAR IS_MAIN EN IMAGEN EXISTENTE
+  // =========================
+  const handleSetMainExisting = async (imageId) => {
+    try {
+      const imageService = new ProductImageService();
+      // Desmarcar la anterior
+      if (mainImageId && mainImageId !== imageId) {
+        await imageService.updateProductImage(mainImageId, { is_main: 0 });
+      }
+      await imageService.updateProductImage(imageId, { is_main: 1 });
+      setMainImageId(imageId);
+      setMainImageIndex(null); // quitar main de nuevas si había
+      setExistingImages((prev) =>
+        prev.map((img) => ({ ...img, is_main: img.id === imageId ? 1 : 0 }))
+      );
+    } catch (error) {
+      console.error("Error actualizando is_main:", error);
+    }
+  };
+
+  // =========================
+  // MARCAR IS_MAIN EN IMAGEN NUEVA
+  // =========================
+  const handleSetMainNew = (index) => {
+    if (mainImageIndex === index) {
+      setMainImageIndex(null);
+    } else {
+      setMainImageIndex(index);
+      // Si había una existente como main, la desmarcamos visualmente
+      // (se actualizará en backend al subir)
+      setMainImageId(null);
+    }
   };
 
   // =========================
@@ -136,20 +214,16 @@ export const CreateProducts = () => {
     e.preventDefault();
     if (loading) return;
     setLoading(true);
-
     try {
       const productInstance = new ProductService();
-
       if (isEditingProduct && selectedProduct) {
         await productInstance.updateProduct(selectedProduct.id, form);
       } else {
         await productInstance.createProduct(form);
       }
-
       setForm({ name: "", description: "", brand_id: "", subcategory_id: "" });
       setSelectedProduct(null);
       setIsEditingProduct(false);
-
       await fetchProducts();
     } catch (error) {
       console.error("Error guardando producto:", error);
@@ -168,11 +242,9 @@ export const CreateProducts = () => {
       brand_id: product.brand_id || "",
       subcategory_id: product.subcategory_id || "",
     });
-
     setSelectedProduct(product);
     setIsEditingProduct(true);
     setMode("product");
-
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -182,41 +254,29 @@ export const CreateProducts = () => {
   const handleVariationSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
-
     if (!variationForm.product_id) {
       alert("Seleccioná un producto desde la tabla primero.");
       return;
     }
-
     setLoading(true);
-
     try {
       const sanitized = Object.fromEntries(
         Object.entries(variationForm).map(([k, v]) => [k, v === "" ? null : v])
       );
-
       const variationInstance = new ProductVariationService();
-
       if (isEditingVariation && selectedVariation) {
-        await variationInstance.updateProductVariation(
-          selectedVariation.id,
-          sanitized
-        );
+        await variationInstance.updateProductVariation(selectedVariation.id, sanitized);
       } else {
         await variationInstance.createProductVariation(sanitized);
       }
 
-      // ✅ FIX: forzar número para evitar type mismatch string vs number
       const productId = Number(variationForm.product_id);
-
-      // Invalidar cache de variantes de ese producto
       setVariationsMap((prev) => {
         const updated = { ...prev };
         delete updated[productId];
         return updated;
       });
 
-      // ✅ FIX: comparar ambos como número
       if (expandedProductId === productId) {
         const variationInstance2 = new ProductVariationService();
         try {
@@ -228,23 +288,14 @@ export const CreateProducts = () => {
         }
       }
 
-      // Reset
       setVariationForm({
-        name: "",
-        sku_variation: "",
-        product_id: "",
-        color_id: "",
-        size_id: "",
-        older_price: "",
-        current_price: "",
-        discount: 0,
+        name: "", sku_variation: "", product_id: "",
+        color_id: "", size_id: "", older_price: "", current_price: "", discount: 0,
       });
-
       setSelectedVariation(null);
       setSelectedProduct(null);
       setIsEditingVariation(false);
       setMode("product");
-
     } catch (error) {
       console.error("Error guardando variante:", error);
     } finally {
@@ -269,20 +320,28 @@ export const CreateProducts = () => {
     setLoading(true);
     try {
       const imageService = new ProductImageService();
-      const uploadPromises = images.map((img) => {
+
+      // Si una nueva imagen será is_main, desmarcar la existente en backend
+      if (mainImageIndex !== null && mainImageId) {
+        await imageService.updateProductImage(mainImageId, { is_main: 0 });
+      }
+
+      const uploadPromises = images.map((img, index) => {
         const formData = new FormData();
         formData.append("image", img.file);
         formData.append("product_id", selectedProduct.id);
         formData.append("product_variation_id", selectedVariation.id);
+        formData.append("is_main", index === mainImageIndex ? 1 : 0);
         return imageService.createProductImage(formData);
       });
       await Promise.all(uploadPromises);
 
       images.forEach((img) => URL.revokeObjectURL(img.preview));
       setImages([]);
-      setSelectedVariation(null);
-      setSelectedProduct(null);
-      setMode("product");
+      setMainImageIndex(null);
+
+      // Refrescar galería de imágenes existentes
+      await fetchImagesForVariation(selectedVariation.id);
     } catch (error) {
       console.error("Error subiendo imágenes:", error);
     } finally {
@@ -296,7 +355,7 @@ export const CreateProducts = () => {
   const handleOpenVariation = (product) => {
     setSelectedProduct(product);
     setVariationForm({
-      name: "", sku_variation: "", product_id: Number(product.id), // ✅ número
+      name: "", sku_variation: "", product_id: Number(product.id),
       color_id: "", size_id: "", older_price: "", current_price: "", discount: 0,
     });
     setIsEditingVariation(false);
@@ -308,32 +367,33 @@ export const CreateProducts = () => {
   const handleEditVariation = (product, variation) => {
     setSelectedProduct(product);
     setSelectedVariation(variation);
-
     setVariationForm({
       name: variation.name || "",
       sku_variation: variation.sku_variation || "",
-      product_id: Number(product.id), // ✅ número
+      product_id: Number(product.id),
       color_id: variation.color_id || "",
       size_id: variation.size_id || "",
       older_price: variation.older_price || "",
       current_price: variation.current_price || "",
       discount: variation.discount || 0,
     });
-
     setIsEditingVariation(true);
     setMode("variation");
-
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // =========================
-  // OPEN IMAGE FORM FROM VARIATION ROW
+  // OPEN IMAGE FORM — carga imágenes existentes
   // =========================
   const handleOpenImageForVariation = (product, variation) => {
     setSelectedProduct(product);
     setSelectedVariation(variation);
     setImages([]);
+    setMainImageIndex(null);
+    setExistingImages([]);
+    setMainImageId(null);
     setMode("image");
+    fetchImagesForVariation(variation.id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -346,10 +406,11 @@ export const CreateProducts = () => {
       name: "", sku_variation: "", product_id: "",
       color_id: "", size_id: "", older_price: "", current_price: "", discount: 0,
     });
-
     images.forEach((img) => URL.revokeObjectURL(img.preview));
     setImages([]);
-
+    setExistingImages([]);
+    setMainImageId(null);
+    setMainImageIndex(null);
     setSelectedProduct(null);
     setSelectedVariation(null);
     setIsEditingProduct(false);
@@ -375,7 +436,6 @@ export const CreateProducts = () => {
         setBrands(response);
       } catch (error) { console.error(error); }
     };
-
     fetchCategories();
     fetchBrands();
     fetchProducts();
@@ -395,37 +455,46 @@ export const CreateProducts = () => {
     if (isImageMode) return handleImageSubmit(e);
   };
 
+  // =========================
+  // RENDER
+  // =========================
   return (
     <div>
-      {/* header */}
+      {/* Header */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold">
-          {isVariationMode ? `Nueva Variante — ${selectedProduct?.name}`
-            : isImageMode ? `Nueva Imagen — ${selectedVariation?.name || selectedProduct?.name}`
+          {isVariationMode
+            ? `Nueva Variante — ${selectedProduct?.name}`
+            : isImageMode
+              ? `Nueva Imagen — ${selectedVariation?.name || selectedProduct?.name}`
               : "Crear Producto"}
         </h2>
         <p className="text-slate-500">
-          {isVariationMode ? "Completá los detalles de la variante para el producto seleccionado."
-            : isImageMode ? `Subí imágenes para la variante seleccionada.`
+          {isVariationMode
+            ? "Completá los detalles de la variante para el producto seleccionado."
+            : isImageMode
+              ? "Subí imágenes para la variante seleccionada."
               : "Completá los detalles para incluir su nuevo producto en el mercado."}
         </p>
       </div>
 
-      {/* tabs y botones */}
+      {/* Tabs y botones */}
       <div className="flex justify-between mt-2 mb-4">
         <div className="flex gap-4 border-b border-slate-200">
           <button
             onClick={() => setMode("product")}
-            className={`px-6 py-3 text-sm font-semibold border-b-2 transition ${isProductMode ? "border-[#6366f1] text-[#6366f1]" : "border-transparent text-slate-500 hover:text-[#6366f1]"
-              }`}
+            className={`px-6 py-3 text-sm font-semibold border-b-2 transition ${isProductMode
+              ? "border-[#6366f1] text-[#6366f1]"
+              : "border-transparent text-slate-500 hover:text-[#6366f1]"}`}
           >
             Nuevo Producto
           </button>
 
           <button
             onClick={() => setMode("variation")}
-            className={`px-6 py-3 text-sm font-semibold border-b-2 transition ${isVariationMode ? "border-[#6366f1] text-[#6366f1]" : "border-transparent text-slate-500 hover:text-[#6366f1]"
-              }`}
+            className={`px-6 py-3 text-sm font-semibold border-b-2 transition ${isVariationMode
+              ? "border-[#6366f1] text-[#6366f1]"
+              : "border-transparent text-slate-500 hover:text-[#6366f1]"}`}
           >
             Nueva Variante
             {isVariationMode && selectedProduct && (
@@ -437,8 +506,9 @@ export const CreateProducts = () => {
 
           <button
             onClick={() => setMode("image")}
-            className={`px-6 py-3 text-sm font-semibold border-b-2 transition ${isImageMode ? "border-[#6366f1] text-[#6366f1]" : "border-transparent text-slate-500 hover:text-[#6366f1]"
-              }`}
+            className={`px-6 py-3 text-sm font-semibold border-b-2 transition ${isImageMode
+              ? "border-[#6366f1] text-[#6366f1]"
+              : "border-transparent text-slate-500 hover:text-[#6366f1]"}`}
           >
             Nueva Imagen
             {isImageMode && selectedVariation && (
@@ -469,16 +539,15 @@ export const CreateProducts = () => {
             {loading
               ? "Guardando..."
               : isProductMode
-                ? (isEditingProduct ? "Actualizar Producto" : "Crear Producto")
+                ? isEditingProduct ? "Actualizar Producto" : "Crear Producto"
                 : isVariationMode
-                  ? (isEditingVariation ? "Actualizar Variante" : "Crear Variante")
-                  : "Subir Imágenes"
-            }
+                  ? isEditingVariation ? "Actualizar Variante" : "Crear Variante"
+                  : "Subir Imágenes"}
           </button>
         </div>
       </div>
 
-      {/* form producto */}
+      {/* ========================= FORM PRODUCTO ========================= */}
       {isProductMode && (
         <form onSubmit={handleSubmit} className="space-y-8 pb-12">
           <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -489,22 +558,28 @@ export const CreateProducts = () => {
             <div className="p-6 space-y-6">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Nombre del Producto</label>
-                <input type="text" name="name" value={form.name} onChange={handleChange}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                <input
+                  type="text" name="name" value={form.name} onChange={handleChange}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2"
+                />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Categoría</label>
-                  <select name="subcategory_id" value={form.subcategory_id} onChange={handleChange}
-                    className="w-full bg-white rounded-lg border border-slate-200 px-3 py-2">
+                  <select
+                    name="subcategory_id" value={form.subcategory_id} onChange={handleChange}
+                    className="w-full bg-white rounded-lg border border-slate-200 px-3 py-2"
+                  >
                     <option value="">Selecciona una categoría</option>
                     {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Marca</label>
-                  <select name="brand_id" value={form.brand_id} onChange={handleChange}
-                    className="w-full bg-white rounded-lg border border-slate-200 px-3 py-2">
+                  <select
+                    name="brand_id" value={form.brand_id} onChange={handleChange}
+                    className="w-full bg-white rounded-lg border border-slate-200 px-3 py-2"
+                  >
                     <option value="">Selecciona una marca</option>
                     {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
@@ -512,30 +587,37 @@ export const CreateProducts = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Descripción</label>
-                <textarea name="description" value={form.description} onChange={handleChange}
-                  rows={4} className="w-full rounded-lg border border-slate-200 px-3 py-2" />
+                <textarea
+                  name="description" value={form.description} onChange={handleChange}
+                  rows={4} className="w-full rounded-lg border border-slate-200 px-3 py-2"
+                />
               </div>
             </div>
           </section>
         </form>
       )}
 
-      {/* form variante */}
+      {/* ========================= FORM VARIANTE ========================= */}
       {isVariationMode && (
         <form onSubmit={handleVariationSubmit} className="space-y-8 pb-12">
           <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-200">
               <h3 className="text-lg font-bold">Detalle de la Variante</h3>
               <p className="text-sm text-slate-500">
-                {selectedProduct ? `Variante para: ${selectedProduct.name}` : "Seleccioná un producto desde la tabla."}
+                {selectedProduct
+                  ? `Variante para: ${selectedProduct.name}`
+                  : "Seleccioná un producto desde la tabla."}
               </p>
             </div>
             <div className="p-6 space-y-6">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Producto</label>
-                <input type="text"
+                <input
+                  type="text"
                   value={selectedProduct ? `#${selectedProduct.id} — ${selectedProduct.name}` : ""}
-                  disabled className="w-full rounded-lg border border-slate-200 px-3 py-2 bg-slate-50 text-slate-400" />
+                  disabled
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 bg-slate-50 text-slate-400"
+                />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
@@ -549,8 +631,10 @@ export const CreateProducts = () => {
                 ].map(({ label, name, ...rest }) => (
                   <div key={name}>
                     <label className="block text-sm font-medium text-slate-700 mb-2">{label}</label>
-                    <input name={name} value={variationForm[name]} onChange={handleVariationChange}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2" {...rest} />
+                    <input
+                      name={name} value={variationForm[name]} onChange={handleVariationChange}
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2" {...rest}
+                    />
                   </div>
                 ))}
               </div>
@@ -559,7 +643,7 @@ export const CreateProducts = () => {
         </form>
       )}
 
-      {/* form imagen */}
+      {/* ========================= FORM IMAGEN ========================= */}
       {isImageMode && (
         <form onSubmit={handleImageSubmit} className="space-y-8 pb-12">
           <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -572,22 +656,110 @@ export const CreateProducts = () => {
               </p>
             </div>
             <div className="p-6 space-y-6">
+
+              {/* Producto / Variante */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Producto</label>
-                  <input type="text"
+                  <input
+                    type="text"
                     value={selectedProduct ? `#${selectedProduct.id} — ${selectedProduct.name}` : ""}
-                    disabled className="w-full rounded-lg border border-slate-200 px-3 py-2 bg-slate-50 text-slate-400" />
+                    disabled
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 bg-slate-50 text-slate-400"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Variante</label>
-                  <input type="text"
+                  <input
+                    type="text"
                     value={selectedVariation ? `#${selectedVariation.id} — ${selectedVariation.name}` : ""}
-                    disabled className="w-full rounded-lg border border-slate-200 px-3 py-2 bg-slate-50 text-slate-400" />
+                    disabled
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 bg-slate-50 text-slate-400"
+                  />
                 </div>
               </div>
+
+              {/* IMÁGENES EXISTENTES */}
+              {existingImages.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <label className="block text-sm font-medium text-slate-700">
+                      Imágenes actuales
+                    </label>
+                    <span className="flex flex-row items-center justify-center gap-2 text-xs text-slate-400">
+                      — Hacé hover y clickeá la <Star size={14}/> para marcar como principal, o la ✕ para eliminar
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                    {existingImages.map((img) => {
+                      const isMain = mainImageId === img.id;
+                      return (
+                        <div
+                          key={img.id}
+                          className={`relative group rounded-lg overflow-hidden border-2 aspect-square transition-all duration-200 ${isMain
+                            ? "border-yellow-400 ring-2 ring-yellow-200"
+                            : "border-slate-200 hover:border-slate-300"
+                            }`}
+                        >
+                          <img
+                            src={`${import.meta.env.VITE_API_URL || "http://localhost:3014"}/${img.url.replace(/^api\//, "")}`}
+                            alt={`imagen-${img.id}`}
+                            className="w-full h-full object-cover"
+                          />
+
+                          {/* Overlay con acciones */}
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
+                            {/* Botón estrella */}
+                            <button
+                              type="button"
+                              onClick={() => handleSetMainExisting(img.id)}
+                              title={isMain ? "Imagen principal" : "Marcar como principal"}
+                              className={`p-1.5 rounded-full transition-all duration-150 ${isMain
+                                ? "bg-yellow-400 text-white scale-110"
+                                : "bg-white/90 text-slate-500 hover:bg-yellow-400 hover:text-white"
+                                }`}
+                            >
+                              <Star size={14} fill={isMain ? "currentColor" : "none"} />
+                            </button>
+
+                            {/* Botón eliminar */}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteExistingImage(img.id)}
+                              title="Eliminar imagen"
+                              className="p-1.5 rounded-full bg-white/90 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-150"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+
+                          {/* Badge Principal */}
+                          {isMain && (
+                            <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[10px] bg-yellow-400 text-white px-2 py-0.5 rounded-full font-semibold whitespace-nowrap shadow">
+                              Principal
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* AGREGAR NUEVAS IMÁGENES */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Imágenes</label>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    {existingImages.length > 0 ? "Agregar nuevas imágenes" : "Imágenes"}
+                  </label>
+                  {images.length > 0 && (
+                    <span className="flex flex-row items-center justify-center gap-2 text-xs text-slate-400">
+                      — Hacé hover y clickeá la <Star size={14}/> para marcar como principal
+                    </span>
+                  )}
+                </div>
+
+                {/* Drop zone */}
                 <div
                   onClick={() => fileInputRef.current?.click()}
                   className="flex flex-col items-center justify-center gap-2 w-full border-2 border-dashed border-slate-300 rounded-xl p-8 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition"
@@ -596,21 +768,81 @@ export const CreateProducts = () => {
                   <p className="text-sm text-slate-500">Hacé click para seleccionar imágenes</p>
                   <p className="text-xs text-slate-400">PNG, JPG, WEBP hasta 5 MB c/u</p>
                 </div>
-                <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageSelect} />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleImageSelect}
+                />
 
+                {/* Preview nuevas */}
                 {images.length > 0 && (
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 mt-4">
-                    {images.map((img, index) => (
-                      <div key={index} className="relative group rounded-lg overflow-hidden border border-slate-200 aspect-square">
-                        <img src={img.preview} alt={`preview-${index}`} className="w-full h-full object-cover" />
-                        <button type="button" onClick={() => handleRemoveImage(index)}
-                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition">
-                          <X size={12} />
-                        </button>
-                      </div>
-                    ))}
-                    <div onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center justify-center rounded-lg border-2 border-dashed border-slate-300 aspect-square cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition">
+                    {images.map((img, index) => {
+                      const isMain = mainImageIndex === index;
+                      return (
+                        <div
+                          key={index}
+                          className={`relative group rounded-lg overflow-hidden border-2 aspect-square transition-all duration-200 ${isMain
+                            ? "border-yellow-400 ring-2 ring-yellow-200"
+                            : "border-slate-200 hover:border-slate-300"
+                            }`}
+                        >
+                          <img
+                            src={img.preview}
+                            alt={`preview-${index}`}
+                            className="w-full h-full object-cover"
+                          />
+
+                          {/* Overlay con acciones */}
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
+                            {/* Botón estrella */}
+                            <button
+                              type="button"
+                              onClick={() => handleSetMainNew(index)}
+                              title={isMain ? "Imagen principal" : "Marcar como principal"}
+                              className={`p-1.5 rounded-full transition-all duration-150 ${isMain
+                                ? "bg-yellow-400 text-white scale-110"
+                                : "bg-white/90 text-slate-500 hover:bg-yellow-400 hover:text-white"
+                                }`}
+                            >
+                              <Star size={14} fill={isMain ? "currentColor" : "none"} />
+                            </button>
+
+                            {/* Botón eliminar */}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(index)}
+                              className="p-1.5 rounded-full bg-white/90 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-150"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+
+                          {/* Badge Principal */}
+                          {isMain && (
+                            <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[10px] bg-yellow-400 text-white px-2 py-0.5 rounded-full font-semibold whitespace-nowrap shadow">
+                              Principal
+                            </span>
+                          )}
+
+                          {/* Badge Nueva */}
+                          {!isMain && (
+                            <span className="absolute top-1 right-1 text-[9px] bg-indigo-500 text-white px-1.5 py-0.5 rounded font-semibold opacity-0 group-hover:opacity-100 transition">
+                              Nueva
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Botón agregar más */}
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center justify-center rounded-lg border-2 border-dashed border-slate-300 aspect-square cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition"
+                    >
                       <ImagePlus size={20} className="text-slate-400" />
                     </div>
                   </div>
@@ -621,7 +853,7 @@ export const CreateProducts = () => {
         </form>
       )}
 
-      {/* PRODUCT LIST + EXPAND */}
+      {/* ========================= PRODUCT LIST ========================= */}
       <div className="w-full mt-4">
         <div className="w-full bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
           <h2 className="text-lg font-semibold mb-6">Listado de productos</h2>
@@ -644,7 +876,9 @@ export const CreateProducts = () => {
                     <React.Fragment key={product.id}>
                       {/* PRODUCT ROW */}
                       <tr
-                        className={`hover:bg-slate-50 transition ${selectedProduct?.id === product.id && !isProductMode ? "bg-indigo-50 border-l-4 border-indigo-400" : ""
+                        className={`hover:bg-slate-50 transition ${selectedProduct?.id === product.id && !isProductMode
+                          ? "bg-indigo-50 border-l-4 border-indigo-400"
+                          : ""
                           }`}
                       >
                         {/* Expand toggle */}
@@ -718,11 +952,11 @@ export const CreateProducts = () => {
                                       <th className="px-6 py-2 text-xs font-bold text-slate-400 uppercase">Acción</th>
                                     </tr>
                                   </thead>
-                                  <tbody className="divide-y divide-slate-100">
+                                  <tbody className="divide-y divide-slate-100 bg-white">
                                     {variationsMap[Number(product.id)].map((variation) => (
                                       <tr
                                         key={variation.id}
-                                        className={`hover:bg-white transition ${selectedVariation?.id === variation.id && isImageMode
+                                        className={`hover:bg-slate-50 transition ${selectedVariation?.id === variation.id && isImageMode
                                           ? "bg-white border-l-4 border-indigo-400"
                                           : ""
                                           }`}
@@ -730,9 +964,7 @@ export const CreateProducts = () => {
                                         <td className="px-12 py-3 text-sm text-slate-500">#{variation.id}</td>
                                         <td className="px-6 py-3 text-sm font-medium">{variation.name || "—"}</td>
                                         <td className="px-6 py-3 text-sm text-slate-400">{variation.sku_variation || "—"}</td>
-                                        <td className="px-6 py-3 text-sm text-slate-600">
-                                          ${variation.current_price}
-                                        </td>
+                                        <td className="px-6 py-3 text-sm text-slate-600">${variation.current_price}</td>
                                         <td className="px-6 py-3">
                                           <button
                                             type="button"

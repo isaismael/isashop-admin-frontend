@@ -12,13 +12,13 @@ export const menuItems = [
     icon: <Package />,
     permission: null,
     children: [
+      // {
+      //   title: 'Lista de Productos',
+      //   path: '/admin/products/listproducts',
+      //   permission: 'product.read'
+      // },
       {
-        title: 'Lista de Productos',
-        path: '/admin/products/listproducts',
-        permission: 'product.read'
-      },
-      {
-        title: 'Crear Producto',
+        title: 'Catalogo',
         path: '/admin/products/create',
         permission: 'product.create'
       },
@@ -30,6 +30,16 @@ export const menuItems = [
       {
         title: 'Categorias',
         path: '/admin/products/category',
+        permission: 'product.create'
+      },
+      {
+        title: 'Colores',
+        path: '/admin/products/colors',
+        permission: 'product.create'
+      },
+      {
+        title: 'Tallas',
+        path: '/admin/products/sizes',
         permission: 'product.create'
       },
     ]
