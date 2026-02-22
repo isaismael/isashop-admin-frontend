@@ -10,6 +10,9 @@ import { Brands } from './pages/brands/Brands';
 import { Categories } from './pages/categories/categories';
 import { Colors } from './pages/colors/Colors';
 import { Sizes } from './pages/sizes/Sizes';
+// -> warehouse
+import { Warehouse } from './pages/warehouse/Warehouse';
+import { Stock } from './pages/stock/Stock';
 
 function App() {
   return (
@@ -40,6 +43,9 @@ function App() {
             <Route path="products/category" element={<Categories />} />
             <Route path="products/colors" element={<Colors />} />
             <Route path="products/sizes" element={<Sizes />} />
+            {/* Warehouse */}
+            <Route path="warehouse/warehouse" element={<Warehouse />} />
+            <Route path="warehouse/stock" element={<Stock />} />
             {/* Agrega más rutas aquí */}
           </Route>
 
