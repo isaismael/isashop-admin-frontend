@@ -13,6 +13,9 @@ import { Sizes } from './pages/sizes/Sizes';
 // -> warehouse
 import { Warehouse } from './pages/warehouse/Warehouse';
 import { Stock } from './pages/stock/Stock';
+// -> shipping
+import { ShippingCost } from './pages/shippingcost/ShippingCost';
+import { Province } from './pages/province/Province';
 
 function App() {
   return (
@@ -46,6 +49,9 @@ function App() {
             {/* Warehouse */}
             <Route path="warehouse/warehouse" element={<Warehouse />} />
             <Route path="warehouse/stock" element={<Stock />} />
+            {/* Shipping */}
+            <Route path="shipping/shippingcost" element={<ShippingCost />} />
+            <Route path="shipping/provinces" element={<Province />} />
             {/* Agrega más rutas aquí */}
           </Route>
 

@@ -1,4 +1,4 @@
-import { Package, LayoutDashboard, Warehouse } from 'lucide-react'
+import { Package, LayoutDashboard, Warehouse, Truck } from 'lucide-react'
 
 export const menuItems = [
   {
@@ -58,6 +58,24 @@ export const menuItems = [
       {
         title: 'Stock',
         path: '/admin/warehouse/stock',
+        permission: 'product.create'
+      }
+    ]
+  },
+  {
+    title: 'Envios',
+    path: '/admin/shipping',
+    icon: <Truck />,
+    children:
+    [
+      {
+        title: 'Lugares de envio',
+        path: '/admin/shipping/provinces',
+        permission: 'product.create'
+      },
+      {
+        title: 'Shipping Cost',
+        path: '/admin/shipping/shippingcost',
         permission: 'product.create'
       }
     ]
