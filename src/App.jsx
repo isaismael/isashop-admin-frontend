@@ -16,6 +16,11 @@ import { Stock } from './pages/stock/Stock';
 // -> shipping
 import { ShippingCost } from './pages/shippingcost/ShippingCost';
 import { Province } from './pages/province/Province';
+// -> orders
+import { PaymentOrders } from './pages/paymentorders/PaymentOrders';
+import { PaymentMethods } from './pages/paymentmethods/PaymentMethods';
+// -> users
+
 
 function App() {
   return (
@@ -52,6 +57,10 @@ function App() {
             {/* Shipping */}
             <Route path="shipping/shippingcost" element={<ShippingCost />} />
             <Route path="shipping/provinces" element={<Province />} />
+            {/* Orders */}
+            <Route path="orders/paymentorders" element={<PaymentOrders />} />
+            <Route path="orders/paymentmethods" element={<PaymentMethods />} />
+            {/* Users */}
             {/* Agrega más rutas aquí */}
           </Route>
 

@@ -1,4 +1,4 @@
-import { Package, LayoutDashboard, Warehouse, Truck } from 'lucide-react'
+import { Package, LayoutDashboard, Warehouse, Truck, HandCoins } from 'lucide-react'
 
 export const menuItems = [
   {
@@ -76,6 +76,24 @@ export const menuItems = [
       {
         title: 'Shipping Cost',
         path: '/admin/shipping/shippingcost',
+        permission: 'product.create'
+      }
+    ]
+  },
+  {
+    title: 'Orders',
+    path: '/admin/orders',
+    icon: <HandCoins />,
+    children:
+    [
+      {
+        title: 'Ordenes de pago',
+        path: '/admin/orders/paymentorders',
+        permission: 'product.create'
+      },
+      {
+        title: 'Metodos de pago',
+        path: '/admin/orders/paymentmethods',
         permission: 'product.create'
       }
     ]
