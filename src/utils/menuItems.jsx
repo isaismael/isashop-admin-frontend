@@ -77,6 +77,11 @@ export const menuItems = [
         title: 'Shipping Cost',
         path: '/admin/shipping/shippingcost',
         permission: 'product.create'
+      },
+      {
+        title: 'Pickup Address',
+        path: '/admin/shipping/pickupaddress',
+        permission: 'product.create'
       }
     ]
   },
