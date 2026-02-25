@@ -5,6 +5,7 @@ import { AdminLayout } from './layouts/admin/AdminLayout';
 import { Login } from './pages/login/Login';
 import { Dashboard } from './pages/dashboard/Dashboard';
 import { Products } from './pages/products/Products';
+import { Collection } from './pages/collection/Collection';
 import { CreateProducts } from './pages/products/CreateProducts';
 import { Brands } from './pages/brands/Brands';
 import { Categories } from './pages/categories/categories';
@@ -22,7 +23,10 @@ import { PickupAddresses } from './pages/pickupaddresses/PickupAddresses';
 import { PaymentOrders } from './pages/paymentorders/PaymentOrders';
 import { PaymentMethods } from './pages/paymentmethods/PaymentMethods';
 // -> users
-
+// -> store front
+import { Banner } from './pages/banner/Banner';
+import { CategoryBubbles } from './pages/categorybubbles/CategoryBubbles';
+import { ProductGrid } from './pages/productgird/ProductGrid';
 
 function App() {
   return (
@@ -46,6 +50,7 @@ function App() {
             {/* Products */}
             <Route path="products" element={<Products />} />
             <Route path="products/create" element={<CreateProducts />} />
+            <Route path="products/collections" element={<Collection />} />
             <Route path="products/listproducts" element={<Products />} />
             {/* Brands */}
             <Route path="products/brands" element={<Brands />} />
@@ -64,6 +69,10 @@ function App() {
             <Route path="orders/paymentorders" element={<PaymentOrders />} />
             <Route path="orders/paymentmethods" element={<PaymentMethods />} />
             {/* Users */}
+            {/* Store Front */}
+            <Route path="storefront/banner" element={<Banner />} />
+            <Route path="storefront/categorybubbles" element={<CategoryBubbles />} />
+            <Route path="storefront/productgrid" element={<ProductGrid />} />
             {/* Agrega más rutas aquí */}
           </Route>
 

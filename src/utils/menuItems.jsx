@@ -1,4 +1,4 @@
-import { Package, LayoutDashboard, Warehouse, Truck, HandCoins } from 'lucide-react'
+import { Package, LayoutDashboard, Warehouse, Truck, HandCoins, TvMinimal } from 'lucide-react'
 
 export const menuItems = [
   {
@@ -12,14 +12,14 @@ export const menuItems = [
     icon: <Package />,
     permission: null,
     children: [
-      // {
-      //   title: 'Lista de Productos',
-      //   path: '/admin/products/listproducts',
-      //   permission: 'product.read'
-      // },
       {
         title: 'Catalogo',
         path: '/admin/products/create',
+        permission: 'product.create'
+      },
+      {
+        title: 'Colecciones',
+        path: '/admin/products/collections',
         permission: 'product.create'
       },
       {
@@ -99,6 +99,29 @@ export const menuItems = [
       {
         title: 'Metodos de pago',
         path: '/admin/orders/paymentmethods',
+        permission: 'product.create'
+      }
+    ]
+  },
+  {
+    title: 'StoreFront',
+    path: '/admin/storefront',
+    icon: <TvMinimal />,
+    children:
+    [
+      {
+        title: 'Banner',
+        path: '/admin/storefront/banner',
+        permission: 'product.create'
+      },
+      {
+        title: 'Category Bubbles',
+        path: '/admin/storefront/categorybubbles',
+        permission: 'product.create'
+      },
+      {
+        title: 'Product Grid',
+        path: '/admin/storefront/productgrid',
         permission: 'product.create'
       }
     ]
