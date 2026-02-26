@@ -1,4 +1,4 @@
-import { Package, LayoutDashboard, Warehouse, Truck, HandCoins, TvMinimal } from 'lucide-react'
+import { Package, LayoutDashboard, Warehouse, Truck, HandCoins, TvMinimal, UserStar } from 'lucide-react'
 
 export const menuItems = [
   {
@@ -123,14 +123,19 @@ export const menuItems = [
         title: 'Product Grid',
         path: '/admin/storefront/productgrid',
         permission: 'product.create'
+      },
+      {
+        title: 'Promo Banner',
+        path: '/admin/storefront/promobanner',
+        permission: 'product.create'
       }
     ]
   },
   {
-    title: 'Usuarios',
-    path: '/admin/users',
-    icon: '👥',
-    permission: 'user.view'
+    title: 'Administrador',
+    path: '/admin/administrador',
+    icon: <UserStar />,
+    permission: 'product.create'
   },
   {
     title: 'Configuración',

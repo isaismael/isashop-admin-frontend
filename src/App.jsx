@@ -27,6 +27,9 @@ import { PaymentMethods } from './pages/paymentmethods/PaymentMethods';
 import { Banner } from './pages/banner/Banner';
 import { CategoryBubbles } from './pages/categorybubbles/CategoryBubbles';
 import { ProductGrid } from './pages/productgird/ProductGrid';
+import { PromoBanner } from './pages/promobanner/PromoBanner';
+
+import { Admin } from './pages/admin/Admin';
 
 function App() {
   return (
@@ -73,7 +76,9 @@ function App() {
             <Route path="storefront/banner" element={<Banner />} />
             <Route path="storefront/categorybubbles" element={<CategoryBubbles />} />
             <Route path="storefront/productgrid" element={<ProductGrid />} />
+            <Route path="storefront/promobanner" element={<PromoBanner />} />
             {/* Agrega más rutas aquí */}
+            <Route path="administrador" element={<Admin />} />
           </Route>
 
           {/* Redirección por defecto */}
