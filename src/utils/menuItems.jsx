@@ -45,7 +45,7 @@ export const menuItems = [
     ]
   },
   {
-    title: 'Pedidos',
+    title: 'Inventario',
     path: '/admin/orders',
     icon: <Warehouse />,
     children:
