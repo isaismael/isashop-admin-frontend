@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import * as adminService from "../../services/admin.service";
 
-// ─── ICONS (inline SVG, no deps) ─────────────────────────────────────────────
+// -> ICONS (inline SVG, no deps)
 const Icon = ({ d, size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
     <path d={d} />
@@ -17,7 +17,7 @@ const IClose = () => <Icon d="M18 6L6 18M6 6l12 12" />;
 const ICheck = () => <Icon d="M20 6L9 17l-5-5" />;
 const IShield = () => <Icon d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />;
 
-// ─── THEME ───────────────────────────────────────────────────────────────────
+// -> THEME
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -204,14 +204,14 @@ const styles = `
   .actions-cell { display: flex; gap: 4px; }
 `;
 
-// ─── TOAST ────────────────────────────────────────────────────────────────────
+// -> TOAST
 const Toast = ({ msg, type }) => msg ? (
   <div className={`toast toast-${type}`}>
     {type === "success" ? <ICheck /> : <IClose />} {msg}
   </div>
 ) : null;
 
-// ─── MODAL ────────────────────────────────────────────────────────────────────
+// -> MODAL
 const Modal = ({ title, onClose, children, icon }) => (
   <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
     <div className="modal">
@@ -225,7 +225,7 @@ const Modal = ({ title, onClose, children, icon }) => (
   </div>
 );
 
-// ─── USERS TAB ────────────────────────────────────────────────────────────────
+// -> USERS TAB
 const UsersTab = ({ showToast }) => {
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
@@ -353,7 +353,7 @@ const UsersTab = ({ showToast }) => {
   );
 };
 
-// ─── ROLES TAB ────────────────────────────────────────────────────────────────
+// -> ROLES TAB
 const RolesTab = ({ showToast }) => {
   const [roles, setRoles] = useState([]);
   const [permissions, setPermissions] = useState([]);
@@ -466,7 +466,7 @@ const RolesTab = ({ showToast }) => {
   );
 };
 
-// ─── PERMISSIONS TAB ──────────────────────────────────────────────────────────
+// -> PERMISSIONS TAB
 const PermissionsTab = ({ showToast }) => {
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -557,7 +557,7 @@ const PermissionsTab = ({ showToast }) => {
   );
 };
 
-// ─── ROOT ─────────────────────────────────────────────────────────────────────
+// -> ROOT
 export const Admin = () => {
   const [tab, setTab] = useState("users");
   const [toast, setToast] = useState(null);

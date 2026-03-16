@@ -71,7 +71,7 @@ const formatCurrency = (amount) => {
   })}`;
 };
 
-// ── Modal de detalle de orden ─────────────────────────────────────────────────
+// -> Modal de detalle de orden
 const OrderDetailModal = ({ order, onClose, onStatusChange }) => {
   const [status, setStatus] = useState(order.status);
   const [saving, setSaving] = useState(false);
@@ -294,7 +294,7 @@ const OrderDetailModal = ({ order, onClose, onStatusChange }) => {
   );
 };
 
-// ── Página principal ──────────────────────────────────────────────────────────
+// -> Página principal
 export const PaymentOrders = () => {
   const [orders, setOrders] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -302,7 +302,7 @@ export const PaymentOrders = () => {
   const [limit] = useState(10);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
-  const [filterType, setFilterType] = useState("all"); // "all" | "pickup" | "delivery"
+  const [filterType, setFilterType] = useState("all");
   const [loading, setLoading] = useState(false);
 
   const fetchOrders = async (p, l) => {

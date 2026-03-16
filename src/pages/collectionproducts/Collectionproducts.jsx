@@ -8,7 +8,7 @@ export const CollectionProducts = ({ collection, onBack }) => {
   const [collectionProductIds, setCollectionProductIds] = useState(new Set());
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(null); // product_id being saved
+  const [saving, setSaving] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);

@@ -79,7 +79,7 @@ export const CreateProducts = () => {
     }
   };
 
-  //fetch de variaciones para un producto específico, guardándolas en un map para evitar refetch innecesarios
+  // -> fetch de variaciones para un producto específico, guardándolas en un map para evitar refetch innecesarios
   const fetchVariations = async (productId) => {
     const id = Number(productId);
     if (variationsMap[id]) return;

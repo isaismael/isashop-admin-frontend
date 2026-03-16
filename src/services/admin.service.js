@@ -12,7 +12,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ─── USERS ───────────────────────────────────────────────────────────────────
+// -> usuarios
 export const getUsers = () => api.get("/users").then((r) => r.data.data);
 export const getUserById = (id) => api.get(`/users/${id}`).then((r) => r.data.data);
 export const createUser = (data) => api.post("/users", data).then((r) => r.data.data);
@@ -23,7 +23,7 @@ export const assignRoleToUser = (userId, role_id) =>
 export const removeRoleFromUser = (userId, roleId) =>
   api.delete(`/users/${userId}/roles/${roleId}`).then((r) => r.data);
 
-// ─── ROLES ───────────────────────────────────────────────────────────────────
+// -> roles
 export const getRoles = () => api.get("/roles").then((r) => r.data.data);
 export const getRoleById = (id) => api.get(`/roles/${id}`).then((r) => r.data.data);
 export const createRole = (data) => api.post("/roles", data).then((r) => r.data.data);
@@ -34,7 +34,7 @@ export const assignPermissionToRole = (roleId, permission_id) =>
 export const removePermissionFromRole = (roleId, permissionId) =>
   api.delete(`/roles/${roleId}/permissions/${permissionId}`).then((r) => r.data);
 
-// ─── PERMISSIONS ─────────────────────────────────────────────────────────────
+// -> permisos
 export const getPermissions = () => api.get("/permissions").then((r) => r.data.data);
 export const getPermissionById = (id) => api.get(`/permissions/${id}`).then((r) => r.data.data);
 export const createPermission = (data) => api.post("/permissions", data).then((r) => r.data.data);

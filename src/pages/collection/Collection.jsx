@@ -13,7 +13,7 @@ export const Collection = () => {
   const [form, setForm] = useState(initialForm);
   const [collections, setCollections] = useState([]);
   const [editingId, setEditingId] = useState(null);
-  const [selectedCollection, setSelectedCollection] = useState(null); // 👈 nueva sección
+  const [selectedCollection, setSelectedCollection] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

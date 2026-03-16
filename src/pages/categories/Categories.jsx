@@ -38,7 +38,7 @@ export const Categories = () => {
   const [expandedCategories, setExpandedCategories] = useState({});
 
   const [editingId, setEditingId] = useState(null);
-  const [editingType, setEditingType] = useState(null); // department | category | subcategory
+  const [editingType, setEditingType] = useState(null);
 
   const departmentsService = new DepartmentsService();
   const categoryService = new CategoryService();
@@ -82,7 +82,7 @@ export const Categories = () => {
   const handleSave = async () => {
     try {
       if (editingId) {
-        // UPDATE
+        // -> UPDATE
         if (editingType === "department") {
           await departmentsService.updateDepartment(editingId, {
             name: departmentName,
@@ -105,7 +105,7 @@ export const Categories = () => {
 
         alert("Actualizado correctamente");
       } else {
-        // CREATE
+        // -> CREATE
         if (mode === "department") {
           await departmentsService.createDepartment({
             name: departmentName,
