@@ -28,6 +28,9 @@ import { Banner } from './pages/banner/Banner';
 import { CategoryBubbles } from './pages/categorybubbles/CategoryBubbles';
 import { ProductGrid } from './pages/productgird/ProductGrid';
 import { PromoBanner } from './pages/promobanner/PromoBanner';
+// -> customer
+import { Customer } from './pages/customer/Customer';
+// -> admin
 
 import { Admin } from './pages/admin/Admin';
 
@@ -77,6 +80,8 @@ function App() {
             <Route path="storefront/categorybubbles" element={<CategoryBubbles />} />
             <Route path="storefront/productgrid" element={<ProductGrid />} />
             <Route path="storefront/promobanner" element={<PromoBanner />} />
+            {/* Customer */}
+            <Route path="customer" element={<Customer />} />
             {/* Agrega más rutas aquí */}
             <Route path="administrador" element={<Admin />} />
           </Route>

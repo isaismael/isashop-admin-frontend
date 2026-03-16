@@ -113,19 +113,19 @@ const recentOrders = [
 
 const stockAlerts = [
   {
-    name: "Nike Air Max 270",
-    sku: "NK-AM270-BLK-42",
+    name: "Boku no Hero - Tomo 1",
+    sku: "JWT000001",
     stock: 2,
     warehouse: "Depósito Central",
   },
   {
-    name: "Buzo Oversize Essentials",
-    sku: "BZ-ESS-GRY-L",
+    name: "Figura Kaneki S.H.Figuarts",
+    sku: "JWT000002",
     stock: 4,
     warehouse: "Sucursal Norte",
   },
   {
-    name: "Gorra New Era Classic",
+    name: "Berserk Manga - Tomo 1",
     sku: "GR-NE-BLK-U",
     stock: 1,
     warehouse: "Depósito Central",
@@ -554,8 +554,7 @@ export const Dashboard = () => {
               ))}
             </div>
           </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-slate-900 p-5 text-white shadow-sm">
+          {/* <div className="rounded-2xl border border-slate-200 bg-slate-900 p-5 text-white shadow-sm">
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-xl font-bold">Panel inteligente</h2>
@@ -572,7 +571,7 @@ export const Dashboard = () => {
                 Creá un endpoint /dashboard/summary para centralizar KPIs, gráficos y alertas.
               </p>
             </div>
-          </div>
+          </div> */}
         </div>
       </section>
     </div>

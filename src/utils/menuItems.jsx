@@ -1,4 +1,4 @@
-import { Package, LayoutDashboard, Warehouse, Truck, HandCoins, TvMinimal, UserStar } from 'lucide-react'
+import { Package, LayoutDashboard, Warehouse, Truck, HandCoins, TvMinimal, UserStar, FileUser } from 'lucide-react'
 
 export const menuItems = [
   {
@@ -132,15 +132,15 @@ export const menuItems = [
     ]
   },
   {
+    title: 'Customers',
+    path: '/admin/customer',
+    icon: <FileUser />,
+    permission: 'product.create'
+  },
+  {
     title: 'Administrador',
     path: '/admin/administrador',
     icon: <UserStar />,
     permission: 'product.create'
   },
-  {
-    title: 'Configuración',
-    path: '/admin/settings',
-    icon: '⚙️',
-    permission: 'settings.manage'
-  }
 ];
